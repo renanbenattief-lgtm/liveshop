@@ -1,0 +1,13 @@
+{
+  "name": "LIVESHOP",
+  "short_name": "LIVESHOP",
+  "description": "Compre ao vivo nas lojas que estão vendendo agora.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#140D26",
+  "theme_color": "#140D26",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
