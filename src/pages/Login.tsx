@@ -55,7 +55,7 @@ export default function Login() {
         </form>
         <p className="text-center text-sm text-mist-400 mt-6">
           {mode === 'in' ? 'Ainda não tem conta?' : 'Já tem conta?'}{' '}
-          <button onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setErr(null) }} className="text-tag font-semibold">{mode === 'in' ? 'Criar conta' : 'Entrar'}</button>
+          <button onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setErr(null) }} className="text-tag font-semibold px-2 py-2.5">{mode === 'in' ? 'Criar conta' : 'Entrar'}</button>
         </p>
       </div>
     </div>

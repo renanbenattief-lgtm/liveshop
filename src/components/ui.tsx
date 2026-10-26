@@ -113,8 +113,8 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
         {hint && <span className="block text-sm text-mist-400">{hint}</span>}
       </span>
       <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)}
-        className={`relative h-7 w-12 rounded-full transition-colors shrink-0 ${checked ? 'bg-tag' : 'bg-ink-600'}`}>
-        <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-6' : 'left-1'}`} />
+        className={`relative h-8 w-14 rounded-full transition-colors shrink-0 ${checked ? 'bg-tag' : 'bg-ink-600'}`}>
+        <span className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${checked ? 'left-7' : 'left-1'}`} />
       </button>
     </label>
   )

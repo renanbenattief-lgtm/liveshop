@@ -73,12 +73,12 @@ export default function LiveSetup() {
       <div>
         <p className="field-label">Produtos da live ({picked.length})</p>
         <p className="text-xs text-mist-500 mb-2">O primeiro escolhido começa em destaque. Você troca o destaque durante a live.</p>
-        <ul className="grid sm:grid-cols-2 gap-2">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {products.data.map((p) => {
             const on = picked.includes(p.id)
             const img = [...(p.product_images ?? [])].sort((a, b) => a.position - b.position)[0]?.url
             return (
-              <li key={p.id}>
+              <li key={p.id} className="min-w-0">
                 <button type="button" onClick={() => toggle(p.id)} aria-pressed={on}
                   className={`w-full text-left flex items-center gap-3 p-2 rounded-2xl border transition-colors ${on ? 'border-tag bg-tag/10' : 'border-ink-600 bg-ink-800 hover:border-ink-500'}`}>
                   <div className="h-14 w-14 rounded-xl overflow-hidden bg-ink-700 shrink-0">{img && <img src={img} alt="" className="h-full w-full object-cover" />}</div>

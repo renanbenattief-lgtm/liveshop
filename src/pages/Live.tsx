@@ -143,8 +143,8 @@ export default function Live() {
               <div className="flex-1 min-w-0">
                 <h1 className="font-display font-bold text-lg leading-tight mb-1">{live.title}</h1>
                 {tags.length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap mb-2">
-                    {tags.map((t) => <Link key={t} to={`/buscar?q=%23${t}`} className="text-xs text-mist-300"><span className="hash">#</span>{t}</Link>)}
+                  <div className="flex gap-x-2 flex-wrap -my-1 mb-1">
+                    {tags.map((t) => <Link key={t} to={`/buscar?q=%23${t}`} className="text-xs text-mist-300 py-2 pr-1"><span className="hash">#</span>{t}</Link>)}
                   </div>
                 )}
                 {showChat && (
@@ -183,7 +183,7 @@ export default function Live() {
 
             <form onSubmit={send} className="flex items-center gap-2">
               <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Pergunte algo para a loja…"
-                className="flex-1 h-11 rounded-full bg-ink/60 backdrop-blur border border-white/10 px-4 text-sm placeholder:text-mist-400 outline-none focus:border-tag" aria-label="Mensagem" />
+                className="flex-1 h-11 rounded-full bg-ink/60 backdrop-blur border border-white/10 px-4 text-base placeholder:text-mist-400 outline-none focus:border-tag" aria-label="Mensagem" />
               <button className="h-11 w-11 rounded-full bg-ink/60 backdrop-blur inline-flex items-center justify-center" aria-label="Enviar"><Send size={18} /></button>
             </form>
           </div>

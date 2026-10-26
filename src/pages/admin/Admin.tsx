@@ -169,7 +169,7 @@ export function AdminCategories() {
   }
 
   return (
-    <div className="grid md:grid-cols-[1fr_320px] gap-6 pb-10">
+    <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-6 pb-10">
       {loading ? <Spinner /> : (
         <ul className="card divide-y divide-ink-700">
           {data?.map((c) => (
@@ -177,7 +177,7 @@ export function AdminCategories() {
               <span className="h-9 w-9 rounded-full bg-ink-700 inline-flex items-center justify-center text-tag"><CategoryIcon name={c.icon} size={17} /></span>
               <span className="flex-1">{c.name} <span className="text-xs text-mist-500">/{c.slug}</span></span>
               {c.is_adult && <span className="text-xs font-semibold text-onair">+18 (oculta)</span>}
-              <button onClick={() => del(c)} className="text-sm text-mist-400 hover:text-onair">Excluir</button>
+              <button onClick={() => del(c)} className="text-sm text-mist-400 hover:text-onair px-2 py-2.5">Excluir</button>
             </li>
           ))}
         </ul>

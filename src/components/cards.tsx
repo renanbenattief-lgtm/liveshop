@@ -54,14 +54,14 @@ export function LiveCard({ live }: { live: LiveResult; highlight?: string }) {
 export function StoreRow({ s }: { s: StoreResult }) {
   return (
     <Link to={`/loja/${s.slug}`} className="card flex gap-3 p-3 hover:border-ink-500 transition-colors">
-      <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-ink-700 shrink-0">
+      <div className="relative h-24 w-24 rounded-2xl overflow-hidden bg-ink-700 shrink-0">
         {s.sample_image && <img src={s.sample_image} alt="" className="h-full w-full object-cover" loading="lazy" />}
+        {s.is_live && <span className="absolute left-1 top-1"><OnAir small /></span>}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <StoreAvatar name={s.name} url={s.logo_url} size={22} />
           <span className="font-semibold truncate">{s.name}</span>
-          {s.is_live && <OnAir small />}
         </div>
         <p className="text-sm text-mist-400 mt-1">
           {s.matched_products} {s.matched_products === 1 ? 'produto' : 'produtos'} a partir de <span className="text-tag font-semibold">{money(s.min_price)}</span>

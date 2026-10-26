@@ -29,7 +29,7 @@ export function BuySheet({ product, onClose }: { product: Product | null; onClos
           <p className="font-semibold leading-snug">{product.name}</p>
           <Price price={product.price} promo={product.promo_price} />
           <p className="text-xs text-mist-400 mt-1">{product.stock > 0 ? `${product.stock} em estoque` : 'Esgotado'}</p>
-          <Link to={`/produto/${product.id}`} className="text-sm text-tag underline underline-offset-2">Ver detalhes</Link>
+          <Link to={`/produto/${product.id}`} className="inline-block py-2 text-sm text-tag underline underline-offset-2">Ver detalhes</Link>
         </div>
       </div>
 

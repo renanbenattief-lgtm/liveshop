@@ -69,7 +69,7 @@ export default function Home() {
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-onair animate-pulsedot" /> Ao vivo agora
               </h2>
-              <Link to="/ao-vivo" className="text-sm text-mist-300 hover:text-mist">Ver todas</Link>
+              <Link to="/ao-vivo" className="text-sm text-mist-300 hover:text-mist px-3 py-2.5 -mr-3">Ver todas</Link>
             </div>
             {live.length ? (
               <CardGrid>{live.slice(0, 10).map((l) => <LiveCard key={l.live_id} live={l} />)}</CardGrid>

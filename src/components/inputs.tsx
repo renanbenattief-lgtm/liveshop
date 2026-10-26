@@ -18,7 +18,7 @@ export function TagInput({ value, onChange, placeholder = 'blusadefrio' }: { val
       {value.map((t) => (
         <span key={t} className="chip chip-on h-8">
           <span className="hash">#</span>{t}
-          <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} aria-label={`Remover ${t}`}><X size={14} /></button>
+          <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} aria-label={`Remover ${t}`} className="-mr-2 h-8 w-8 inline-flex items-center justify-center"><X size={14} /></button>
         </span>
       ))}
       <input

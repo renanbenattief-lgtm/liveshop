@@ -12,6 +12,8 @@
   h1, h2, h3 { @apply font-display tracking-tight; }
   :focus-visible { outline: 2px solid #FFD23F; outline-offset: 2px; border-radius: 8px; }
   input, select, textarea { font-size: 16px; } /* evita zoom no iOS */
+  button, a, [role='switch'] { touch-action: manipulation; } /* toque imediato, sem zoom de duplo toque */
+  img { -webkit-user-drag: none; }
 }
 
 @layer components {

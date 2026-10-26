@@ -64,7 +64,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <section className="card p-4">
           <h2 className="font-bold mb-3">Próximas lives</h2>
           {upcoming.length ? (
@@ -75,7 +75,7 @@ export default function Dashboard() {
                 </Link></li>
               ))}
             </ul>
-          ) : <p className="text-sm text-mist-400">Nenhuma live agendada. <Link to="/vendedor/lives/nova" className="text-tag">Agendar</Link></p>}
+          ) : <p className="text-sm text-mist-400">Nenhuma live agendada. <Link to="/vendedor/lives/nova" className="text-tag inline-block py-2">Agendar</Link></p>}
         </section>
         <section className="card p-4">
           <h2 className="font-bold mb-3">Produtos mais exibidos em lives</h2>

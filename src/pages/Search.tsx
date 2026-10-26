@@ -142,7 +142,7 @@ export default function Search({ liveOnly }: { liveOnly?: boolean }) {
           <SearchIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-mist-500" />
           <input value={text} onChange={(e) => setText(e.target.value)} className="input rounded-full pl-11 pr-10"
             placeholder={liveOnly ? 'Filtrar lives ao vivo' : 'Busque um produto ou #hashtag'} aria-label="Buscar" autoFocus={!liveOnly && !filters.q} />
-          {text && <button type="button" onClick={() => { setText(''); patch({ q: '' }) }} className="absolute right-3 top-1/2 -translate-y-1/2 text-mist-400" aria-label="Limpar busca"><X size={18} /></button>}
+          {text && <button type="button" onClick={() => { setText(''); patch({ q: '' }) }} className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 inline-flex items-center justify-center text-mist-400" aria-label="Limpar busca"><X size={18} /></button>}
         </div>
         <button type="button" onClick={() => setSheet(true)} className="md:hidden relative h-12 w-12 rounded-full bg-ink-700 inline-flex items-center justify-center" aria-label="Filtros">
           <SlidersHorizontal size={19} />
@@ -154,7 +154,7 @@ export default function Search({ liveOnly }: { liveOnly?: boolean }) {
         {quick.map((c) => (
           <button key={c.k} onClick={() => patch({ [c.k]: !filters[c.k] })} className={`chip ${filters[c.k] ? 'chip-on' : ''}`}>{c.label}</button>
         ))}
-        <select value={filters.sort} onChange={(e) => patch({ sort: e.target.value as SearchFilters['sort'] })} className="chip appearance-none pr-4 cursor-pointer" aria-label="Ordenar">
+        <select value={filters.sort} onChange={(e) => patch({ sort: e.target.value as SearchFilters['sort'] })} className="chip appearance-none pr-4 cursor-pointer text-[16px]" aria-label="Ordenar">
           {SORTS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
         </select>
       </div>
@@ -203,7 +203,7 @@ export default function Search({ liveOnly }: { liveOnly?: boolean }) {
               {res.data.stores.length > 0 && (
                 <section className="mt-10">
                   <h2 className="text-xl font-bold mb-3">Lojas que vendem {label || 'isso'}</h2>
-                  <div className="grid md:grid-cols-2 gap-3">{res.data.stores.map((s) => <StoreRow key={s.store_id} s={s} />)}</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{res.data.stores.map((s) => <StoreRow key={s.store_id} s={s} />)}</div>
                 </section>
               )}
             </>
