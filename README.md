@@ -52,6 +52,18 @@ botão para fixar produto em destaque · frete (grátis, 48h, prazo, estados) ·
 **Admin:** visão geral · aprovar/reprovar/suspender lojas · encerrar lives ·
 categorias (inclusive +18 oculta) · comissão, hashtags em destaque e admins.
 
+## Batalhas do Bem
+
+Duas lojas vendem o mesmo produto, pelo mesmo preço, numa live dupla, sem perdedor.
+
+- **Convite:** a loja escolhe um produto e o sistema sugere lojas com produto parecido e o mesmo preço.
+- **Termo:** cada loja aceita o termo (versionado; guarda data, hora e versão) e declara o mesmo custo unitário.
+- **Meta conjunta:** as duas lojas enchem a mesma barra; ao bater a meta, libera o prêmio para quem assiste.
+- **Divisão:** sai a comissão, cada loja recebe o custo das peças e o frete que ela pagou, e o lucro é dividido igualmente
+  (função `battle_split` no banco, mesma conta em `src/lib/battles.ts`).
+- O termo de exemplo deve ser revisado por um advogado antes do lançamento (admin → Batalhas → editar termo).
+- As vendas entram no extrato automaticamente quando o checkout com split for ligado (fase 3).
+
 ## Próximas fases
 
 2. Vídeo ao vivo real (LiveKit ou Mux) + chat e espectadores em tempo real

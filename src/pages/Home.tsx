@@ -5,6 +5,9 @@ import { CardGrid, LiveCard } from '@/components/cards'
 import { Empty, ErrorBox, Logo, Spinner } from '@/components/ui'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { getCategories, searchLives, trendingTags } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
+import type { PublicBattle } from '@/lib/battles'
+import { BattleCard } from '@/components/battle'
 import { useAsync } from '@/lib/useAsync'
 import { useAuth } from '@/lib/auth'
 import { compact } from '@/lib/format'
@@ -14,8 +17,11 @@ export default function Home() {
   const { store } = useAuth()
   const [q, setQ] = useState('')
   const { data, loading, error } = useAsync(async () => {
-    const [lives, tags, cats] = await Promise.all([searchLives({}, null, 60), trendingTags(14), getCategories()])
-    return { lives, tags, cats }
+    const [lives, tags, cats, battles] = await Promise.all([
+      searchLives({}, null, 60), trendingTags(14), getCategories(),
+      supabase.rpc('public_battles', { p_limit: 8 }).then((r) => (r.data ?? []) as PublicBattle[]),
+    ])
+    return { lives, tags, cats, battles }
   }, [])
 
   const live = data?.lives.filter((l) => l.status === 'live') ?? []
@@ -77,6 +83,16 @@ export default function Home() {
               <Empty title="Nenhuma loja ao vivo neste momento">Veja as próximas lives abaixo ou ative o lembrete das suas lojas favoritas.</Empty>
             )}
           </section>
+
+          {data.battles.length > 0 && (
+            <section className="px-4 md:px-6 pb-8">
+              <h2 className="text-2xl font-bold">Batalhas do Bem</h2>
+              <p className="text-sm text-mist-400 mb-3">Duas lojas, o mesmo produto e o mesmo preço. Compre de qualquer lado: o lucro é dividido igualmente.</p>
+              <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 snap-x">
+                {data.battles.map((b) => <div key={b.battle_id} className="w-[280px] md:w-[320px] shrink-0 snap-start"><BattleCard b={b} /></div>)}
+              </div>
+            </section>
+          )}
 
           <section className="px-4 md:px-6 pb-8">
             <h2 className="text-2xl font-bold mb-3">Categorias</h2>

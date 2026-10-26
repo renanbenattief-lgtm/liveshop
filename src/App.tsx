@@ -21,7 +21,9 @@ import LiveSetup from '@/pages/seller/LiveSetup'
 import LiveStudio from '@/pages/seller/LiveStudio'
 import Shipping from '@/pages/seller/Shipping'
 import StoreSettings from '@/pages/seller/StoreSettings'
-import { AdminCategories, AdminLayout, AdminLives, AdminOverview, AdminSettings, AdminStores } from '@/pages/admin/Admin'
+import { NewBattle, SellerBattleDetail, SellerBattles } from '@/pages/seller/Battles'
+import BattlePage from '@/pages/BattlePage'
+import { AdminBattles, AdminCategories, AdminLayout, AdminLives, AdminOverview, AdminSettings, AdminStores } from '@/pages/admin/Admin'
 import { Empty } from '@/components/ui'
 
 export default function App() {
@@ -34,6 +36,7 @@ export default function App() {
             <Route path="buscar" element={<Search />} />
             <Route path="ao-vivo" element={<Search liveOnly />} />
             <Route path="live/:id" element={<Live />} />
+            <Route path="batalha/:id" element={<BattlePage />} />
             <Route path="loja/:slug" element={<StorePage />} />
             <Route path="produto/:id" element={<ProductPage />} />
             <Route path="entrar" element={<Login />} />
@@ -47,6 +50,9 @@ export default function App() {
               <Route path="produtos/:id" element={<ProductForm />} />
               <Route path="lives" element={<Lives />} />
               <Route path="lives/nova" element={<LiveSetup />} />
+              <Route path="batalhas" element={<SellerBattles />} />
+              <Route path="batalhas/nova" element={<NewBattle />} />
+              <Route path="batalhas/:id" element={<SellerBattleDetail />} />
               <Route path="frete" element={<Shipping />} />
               <Route path="loja" element={<StoreSettings />} />
             </Route>
@@ -56,6 +62,7 @@ export default function App() {
               <Route index element={<AdminOverview />} />
               <Route path="lojas" element={<AdminStores />} />
               <Route path="lives" element={<AdminLives />} />
+              <Route path="batalhas" element={<AdminBattles />} />
               <Route path="categorias" element={<AdminCategories />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>

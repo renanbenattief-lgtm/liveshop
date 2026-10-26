@@ -8,11 +8,15 @@ import type { Category, Live, Store } from '@/lib/types'
 import { Empty, Field, OnAir, Rating, Spinner, StoreAvatar, Toggle } from '@/components/ui'
 import { TagInput } from '@/components/inputs'
 import { CATEGORY_ICONS, CategoryIcon } from '@/components/CategoryIcon'
+import { BattleStatusPill } from '@/components/battle'
+import { type Battle, type BattleParticipant, PARTICIPANT_SELECT, getTerms } from '@/lib/battles'
+import { money, whenLabel } from '@/lib/format'
 
 const tabs = [
   { to: '/admin', label: 'Visão geral', end: true },
   { to: '/admin/lojas', label: 'Lojas' },
   { to: '/admin/lives', label: 'Lives' },
+  { to: '/admin/batalhas', label: 'Batalhas' },
   { to: '/admin/categorias', label: 'Categorias' },
   { to: '/admin/configuracoes', label: 'Configurações' },
 ]
@@ -233,5 +237,53 @@ export function AdminSettings() {
       </Field>
       <button className="btn btn-primary">Salvar configurações</button>
     </form>
+  )
+}
+
+export function AdminBattles() {
+  const { data, loading } = useAsync(async () => {
+    const battles = must(await supabase.from('battles').select('*').order('created_at', { ascending: false }).limit(100)) as Battle[]
+    const parts = battles.length ? must(await supabase.from('battle_participants').select(PARTICIPANT_SELECT).in('battle_id', battles.map((b) => b.id))) as BattleParticipant[] : []
+    return battles.map((b) => ({ ...b, parts: parts.filter((p) => p.battle_id === b.id) }))
+  }, [])
+  const terms = useAsync(() => getTerms(), [])
+  const [body, setBody] = useState('')
+  useEffect(() => { if (terms.data) setBody(terms.data.body) }, [terms.data])
+
+  const saveTerms = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!terms.data || body.trim() === terms.data.body.trim()) return toast('Nenhuma mudança no termo')
+    if (!window.confirm('Publicar uma nova versão do termo? As próximas batalhas usarão a nova versão; as já aceitas continuam com a versão antiga.')) return
+    const { error } = await supabase.from('battle_terms').insert({ version: terms.data.version + 1, body })
+    if (error) return toast.error(error.message)
+    toast.success(`Termo versão ${terms.data.version + 1} publicado`); terms.reload()
+  }
+
+  return (
+    <div className="space-y-6 pb-10">
+      {loading ? <Spinner /> : !data?.length ? <Empty title="Nenhuma batalha criada ainda" /> : (
+        <ul className="space-y-2">
+          {data.map((b) => (
+            <li key={b.id} className="card p-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{b.title}</p>
+                  <p className="text-sm text-mist-400 truncate">{b.parts.map((p) => p.stores?.name).join(' x ')}</p>
+                  <p className="text-xs text-mist-500">{money(b.unit_price)} · custo {money(b.unit_cost)} · {b.parts.reduce((a, p) => a + p.units_sold, 0)} vendas · {b.scheduled_at && whenLabel(b.scheduled_at)}</p>
+                </div>
+                <BattleStatusPill status={b.status} />
+              </div>
+              {(b.status === 'scheduled' || b.status === 'live' || b.status === 'ended') && <Link to={`/batalha/${b.id}`} className="inline-block text-sm text-tag py-2">Ver página da batalha</Link>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={saveTerms} className="card p-4 space-y-3">
+        <h2 className="font-bold">Termo da Batalha do Bem {terms.data && <span className="text-sm font-normal text-mist-400">(versão atual: {terms.data.version})</span>}</h2>
+        <p className="text-sm text-mist-400">Recomendado: revise o texto com um advogado antes de lançar. Salvar cria uma nova versão; batalhas já aceitas guardam a versão que cada loja leu.</p>
+        <textarea className="input min-h-[320px] leading-relaxed" value={body} onChange={(e) => setBody(e.target.value)} />
+        <button className="btn btn-primary">Publicar nova versão</button>
+      </form>
+    </div>
   )
 }

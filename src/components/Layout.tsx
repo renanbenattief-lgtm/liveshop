@@ -29,7 +29,7 @@ function DesktopSearch() {
 export default function Layout() {
   const { store, isAdmin } = useAuth()
   const { pathname } = useLocation()
-  const immersive = pathname.startsWith('/live/')
+  const immersive = pathname.startsWith('/live/') || pathname.startsWith('/batalha/')
 
   return (
     <div className="min-h-screen">
