@@ -8,20 +8,24 @@ import { getCategories, searchLives, trendingTags } from '@/lib/api'
 import { supabase } from '@/lib/supabase'
 import type { PublicBattle } from '@/lib/battles'
 import { BattleCard } from '@/components/battle'
+import { CampaignBanner } from '@/components/campaign'
+import { currentCampaigns } from '@/lib/campaigns'
 import { useAsync } from '@/lib/useAsync'
 import { useAuth } from '@/lib/auth'
+import { BellButton } from '@/pages/Notifications'
 import { compact } from '@/lib/format'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { store } = useAuth()
+  const { store, user } = useAuth()
   const [q, setQ] = useState('')
   const { data, loading, error } = useAsync(async () => {
-    const [lives, tags, cats, battles] = await Promise.all([
+    const [lives, tags, cats, battles, campaigns] = await Promise.all([
       searchLives({}, null, 60), trendingTags(14), getCategories(),
       supabase.rpc('public_battles', { p_limit: 8 }).then((r) => (r.data ?? []) as PublicBattle[]),
+      currentCampaigns(4).catch(() => []),
     ])
-    return { lives, tags, cats, battles }
+    return { lives, tags, cats, battles, campaigns }
   }, [])
 
   const live = data?.lives.filter((l) => l.status === 'live') ?? []
@@ -36,7 +40,10 @@ export default function Home() {
       <section className="px-4 md:px-6 pt-5 md:pt-10 pb-6">
         <div className="flex items-center justify-between md:hidden mb-6">
           <Logo />
-          <Link to={store ? '/vendedor' : '/vender'} className="btn btn-ghost btn-sm"><Store size={15} /> {store ? 'Minha loja' : 'Vender'}</Link>
+          <span className="flex items-center gap-2">
+            {user && <BellButton />}
+            <Link to={store ? '/vendedor' : '/vender'} className="btn btn-ghost btn-sm"><Store size={15} /> {store ? 'Minha loja' : 'Vender'}</Link>
+          </span>
         </div>
         <h1 className="text-[2.1rem] leading-[1.02] md:text-6xl font-extrabold max-w-3xl">
           O que você quer comprar hoje?
@@ -70,6 +77,17 @@ export default function Home() {
 
       {data && (
         <>
+          {data.campaigns.length > 0 && (
+            <section className="px-4 md:px-6 pb-8">
+              <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 snap-x snap-mandatory">
+                {data.campaigns.map((c, i) => (
+                  <div key={c.id} className={`shrink-0 snap-start ${i === 0 ? 'w-[88%] md:w-full' : 'w-[88%] md:w-[48%]'}`}>
+                    <CampaignBanner c={c} compact={i > 0} />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
           <section className="px-4 md:px-6 pb-8">
             <div className="flex items-end justify-between mb-3">
               <h2 className="text-2xl font-bold flex items-center gap-2">

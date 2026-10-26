@@ -22,6 +22,14 @@ export default function LiveSetup() {
   const [picked, setPicked] = useState<string[]>([])
   const [when, setWhen] = useState<'now' | 'later'>(store?.status === 'approved' ? 'now' : 'later')
   const [date, setDate] = useState('')
+  const [campaignId, setCampaignId] = useState('')
+  // campanhas em que a loja entrou e que ainda não terminaram
+  const campaigns = useAsync(async () => {
+    const joined = must(await supabase.from('campaign_stores').select('campaigns(id, name, hashtag, starts_at, ends_at, active)').eq('store_id', store!.id)) as unknown as { campaigns: { id: string; name: string; hashtag: string; starts_at: string; ends_at: string; active: boolean } | null }[]
+    return joined.map((j) => j.campaigns).filter((c): c is NonNullable<typeof c> => !!c && c.active && new Date(c.ends_at) > new Date())
+  }, [store?.id])
+  const liveWhen = when === 'later' && date ? new Date(date) : new Date()
+  const fitting = (campaigns.data ?? []).filter((c) => liveWhen >= new Date(c.starts_at) && liveWhen <= new Date(c.ends_at))
   const [busy, setBusy] = useState(false)
   const approved = store?.status === 'approved' && !!store && cnpjActive(store)
 
@@ -42,6 +50,7 @@ export default function LiveSetup() {
       const live = must(await supabase.from('lives').insert({
         store_id: store.id, title: title.trim(), cover_url: cover[0] ?? store.cover_url ?? firstImg,
         status: 'scheduled', scheduled_at: when === 'later' ? new Date(date).toISOString() : null, featured_product_id: picked[0],
+        campaign_id: fitting.some((c) => c.id === campaignId) ? campaignId : null,
       }).select('id').single()) as { id: string }
       must(await supabase.from('live_products').insert(picked.map((product_id, position) => ({ live_id: live.id, product_id, position }))))
       if (tags.length) must(await supabase.rpc('set_live_tags', { p_live: live.id, p_tags: tags }))
@@ -102,6 +111,15 @@ export default function LiveSetup() {
           <span className="text-xs text-mist-500 self-center">Sugestões:</span>
           {suggested.map((t) => <button type="button" key={t} onClick={() => setTags([...tags, t])} className="chip h-8"><span className="hash">#</span>{t}</button>)}
         </div>
+      )}
+
+      {(campaigns.data?.length ?? 0) > 0 && (
+        <Field label="Campanha" hint={fitting.length ? 'A hashtag da campanha entra na live automaticamente.' : 'Nenhuma das suas campanhas acontece na data escolhida.'}>
+          <select className="input px-3" value={campaignId} onChange={(e) => setCampaignId(e.target.value)} disabled={!fitting.length}>
+            <option value="">Sem campanha</option>
+            {fitting.map((c) => <option key={c.id} value={c.id}>{c.name} · #{c.hashtag}</option>)}
+          </select>
+        </Field>
       )}
 
       <Field label="Capa da live" hint="Aparece na busca antes de o comprador entrar. Se não enviar, usamos a capa da loja.">

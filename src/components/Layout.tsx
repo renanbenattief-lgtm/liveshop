@@ -3,6 +3,8 @@ import { Heart, Home, Radio, Search, Store, User } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Logo } from './ui'
 import { useAuth } from '@/lib/auth'
+import { useNotifications } from '@/lib/notifications'
+import { BellButton } from '@/pages/Notifications'
 import { supabaseConfigured } from '@/lib/supabase'
 
 const nav = [
@@ -27,7 +29,8 @@ function DesktopSearch() {
 }
 
 export default function Layout() {
-  const { store, isAdmin } = useAuth()
+  const { store, isAdmin, user } = useAuth()
+  const { unread } = useNotifications()
   const { pathname } = useLocation()
   const immersive = pathname.startsWith('/live/') || pathname.startsWith('/batalha/')
 
@@ -50,6 +53,7 @@ export default function Layout() {
                 </NavLink>
               ))}
               {isAdmin && <NavLink to="/admin" className="px-3 h-10 rounded-full inline-flex items-center text-mist-300 hover:text-mist">Admin</NavLink>}
+              {user && <BellButton className="ml-1" />}
               <Link to={store ? '/vendedor' : '/vender'} className="btn btn-tag btn-sm ml-2"><Store size={16} /> {store ? 'Minha loja' : 'Vender ao vivo'}</Link>
             </nav>
           </div>
@@ -70,7 +74,8 @@ export default function Layout() {
                     <>
                       {n.to === '/ao-vivo'
                         ? <span className={`h-9 w-12 rounded-2xl inline-flex items-center justify-center ${isActive ? 'bg-onair text-white' : 'bg-ink-700 text-mist'}`}><n.icon size={20} /></span>
-                        : <n.icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />}
+                        : <span className="relative"><n.icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
+                            {n.to === '/seguindo' && unread > 0 && <span className="absolute -top-1 -right-2 h-4 min-w-4 px-1 rounded-full bg-onair text-white text-[10px] font-bold inline-flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}</span>}
                       {n.to !== '/ao-vivo' && n.label}
                     </>
                   )}

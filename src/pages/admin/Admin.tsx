@@ -5,19 +5,22 @@ import { supabase } from '@/lib/supabase'
 import { must, useAsync } from '@/lib/useAsync'
 import { compact, elapsed } from '@/lib/format'
 import type { Category, Live, Store } from '@/lib/types'
-import { Empty, Field, OnAir, Rating, Spinner, StoreAvatar, Toggle } from '@/components/ui'
+import { Empty, Field, OnAir, Rating, Spinner, StoreAvatar, Toggle, Sheet } from '@/components/ui'
 import { TagInput } from '@/components/inputs'
 import { CATEGORY_ICONS, CategoryIcon } from '@/components/CategoryIcon'
 import { BattleStatusPill } from '@/components/battle'
 import { type Battle, type BattleParticipant, PARTICIPANT_SELECT, getTerms } from '@/lib/battles'
 import { money, whenLabel } from '@/lib/format'
 import { cnpjActive, formatCnpj, verifyStoreCnpj } from '@/lib/cnpj'
+import { type Campaign, campaignRange } from '@/lib/campaigns'
+import { ImagePicker } from '@/components/inputs'
 
 const tabs = [
   { to: '/admin', label: 'Visão geral', end: true },
   { to: '/admin/lojas', label: 'Lojas' },
   { to: '/admin/lives', label: 'Lives' },
   { to: '/admin/batalhas', label: 'Batalhas' },
+  { to: '/admin/campanhas', label: 'Campanhas' },
   { to: '/admin/categorias', label: 'Categorias' },
   { to: '/admin/configuracoes', label: 'Configurações' },
 ]
@@ -303,6 +306,77 @@ export function AdminBattles() {
         <textarea className="input min-h-[320px] leading-relaxed" value={body} onChange={(e) => setBody(e.target.value)} />
         <button className="btn btn-primary">Publicar nova versão</button>
       </form>
+    </div>
+  )
+}
+
+const emptyCampaign = { id: '', name: '', slug: '', tagline: '', description: '', hashtag: '', color: '#FFD23F', banner: [] as string[], starts: '', ends: '', minDiscount: '', active: true }
+const toLocal = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16) }
+
+export function AdminCampaigns() {
+  const { data, loading, reload } = useAsync(async () => must(await supabase.from('campaigns').select('*').order('starts_at', { ascending: false })) as Campaign[], [])
+  const [f, setF] = useState(emptyCampaign)
+  const [open, setOpen] = useState(false)
+  const set = (p: Partial<typeof emptyCampaign>) => setF((x) => ({ ...x, ...p }))
+
+  const edit = (c: Campaign) => {
+    setF({ id: c.id, name: c.name, slug: c.slug, tagline: c.tagline ?? '', description: c.description ?? '', hashtag: c.hashtag, color: c.color,
+      banner: c.banner_url ? [c.banner_url] : [], starts: toLocal(c.starts_at), ends: toLocal(c.ends_at), minDiscount: c.min_discount_percent ? String(c.min_discount_percent) : '', active: c.active ?? true })
+    setOpen(true)
+  }
+  const save = async (e: FormEvent) => {
+    e.preventDefault()
+    const payload = {
+      name: f.name.trim(), slug: f.slug || f.name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      tagline: f.tagline || null, description: f.description || null,
+      hashtag: f.hashtag.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9_]/g, ''),
+      color: f.color, banner_url: f.banner[0] ?? null, starts_at: new Date(f.starts).toISOString(), ends_at: new Date(f.ends).toISOString(),
+      min_discount_percent: f.minDiscount ? parseInt(f.minDiscount) : null, active: f.active,
+    }
+    const { error } = f.id ? await supabase.from('campaigns').update(payload).eq('id', f.id) : await supabase.from('campaigns').insert(payload)
+    if (error) return toast.error(error.message.includes('campaigns_slug_key') ? 'Já existe uma campanha com esse endereço' : error.message)
+    toast.success(f.id ? 'Campanha atualizada' : 'Campanha criada'); setOpen(false); setF(emptyCampaign); reload()
+  }
+
+  return (
+    <div className="space-y-4 pb-10">
+      <button onClick={() => { setF(emptyCampaign); setOpen(true) }} className="btn btn-tag btn-sm">Nova campanha</button>
+      {loading ? <Spinner /> : !data?.length ? <Empty title="Nenhuma campanha" /> : (
+        <ul className="space-y-2">
+          {data.map((c) => {
+            const now = Date.now(); const running = now >= +new Date(c.starts_at) && now <= +new Date(c.ends_at); const ended = now > +new Date(c.ends_at)
+            return (
+              <li key={c.id} className="card p-3 flex items-center gap-3">
+                <span className="h-12 w-12 rounded-2xl shrink-0" style={{ background: c.color }} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{c.name} <span className="text-xs font-normal text-mist-400">#{c.hashtag}</span></p>
+                  <p className="text-sm text-mist-400">{campaignRange(c)} · {!c.active ? 'Desativada' : ended ? 'Encerrada' : running ? 'No ar' : 'Agendada'}</p>
+                </div>
+                <button onClick={() => edit(c)} className="btn btn-sm btn-ghost">Editar</button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <Sheet open={open} onClose={() => setOpen(false)} title={f.id ? 'Editar campanha' : 'Nova campanha'}>
+        <form onSubmit={save} className="space-y-3">
+          <Field label="Nome"><input className="input" required value={f.name} onChange={(e) => set({ name: e.target.value })} placeholder="Black Friday ao vivo" /></Field>
+          <Field label="Frase do banner"><input className="input" value={f.tagline} onChange={(e) => set({ tagline: e.target.value })} /></Field>
+          <Field label="Descrição"><textarea className="input" value={f.description} onChange={(e) => set({ description: e.target.value })} /></Field>
+          <div className="grid grid-cols-[1fr_96px] gap-2">
+            <Field label="Hashtag"><input className="input" required value={f.hashtag} onChange={(e) => set({ hashtag: e.target.value })} placeholder="blackfriday" /></Field>
+            <Field label="Cor"><input type="color" className="input p-1 h-12" value={f.color} onChange={(e) => set({ color: e.target.value })} /></Field>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Field label="Começa"><input type="datetime-local" className="input" required value={f.starts} onChange={(e) => set({ starts: e.target.value })} /></Field>
+            <Field label="Termina"><input type="datetime-local" className="input" required value={f.ends} onChange={(e) => set({ ends: e.target.value })} /></Field>
+          </div>
+          <Field label="Desconto mínimo (%)" hint="Opcional. Aparece como regra para as lojas."><input className="input" inputMode="numeric" value={f.minDiscount} onChange={(e) => set({ minDiscount: e.target.value })} /></Field>
+          <Field label="Imagem do banner"><ImagePicker value={f.banner} onChange={(v) => set({ banner: v })} folder="campaigns" aspect="wide" /></Field>
+          <Toggle label="Campanha ativa" checked={f.active} onChange={(v) => set({ active: v })} />
+          <button className="btn btn-primary w-full">{f.id ? 'Salvar campanha' : 'Criar campanha'}</button>
+        </form>
+      </Sheet>
     </div>
   )
 }

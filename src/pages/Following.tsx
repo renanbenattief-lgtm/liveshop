@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth'
 import { whenLabel } from '@/lib/format'
 import type { Live, Store } from '@/lib/types'
 import { Empty, OnAir, Rating, Spinner, StoreAvatar } from '@/components/ui'
+import { BellButton } from '@/pages/Notifications'
 
 export default function Following() {
   const { user, loading: authLoading } = useAuth()
@@ -31,7 +32,11 @@ export default function Following() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 pt-6">
-      <h1 className="text-3xl font-extrabold mb-5">Seguindo</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-3xl font-extrabold">Seguindo</h1>
+        <BellButton />
+      </div>
+      <p className="text-sm text-mist-400 -mt-3 mb-4">Você recebe um aviso quando estas lojas entram ao vivo.</p>
       {!stores.length ? (
         <Empty title="Você ainda não segue nenhuma loja" action={<Link to="/ao-vivo" className="btn btn-primary">Ver lives agora</Link>}>
           Toque em Seguir numa live ou na página da loja para acompanhar por aqui.

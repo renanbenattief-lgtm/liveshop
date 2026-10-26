@@ -76,6 +76,22 @@ Duas lojas vendem o mesmo produto, pelo mesmo preço, numa live dupla, sem perde
 - O termo de exemplo deve ser revisado por um advogado antes do lançamento (admin → Batalhas → editar termo).
 - As vendas entram no extrato automaticamente quando o checkout com split for ligado (fase 3).
 
+## Seguidores e avisos
+
+- Comprador segue lojas (botão Seguir na live e na página da loja) e vê todas em **Seguindo**.
+- Quando uma loja seguida entra ao vivo, ou entra numa Batalha do Bem, o seguidor recebe um **aviso** no app
+  (sino com contador, página **Avisos** e aviso na tela em tempo real). Quem pediu "me avise" também recebe.
+- O lojista recebe aviso de novo seguidor e vê no painel quantos seguidores ganhou na semana.
+- Avisos fora do app (push no celular, e-mail ou WhatsApp) ficam para uma próxima etapa.
+
+## Campanhas temáticas
+
+- O admin cria campanhas por data (nome, frase, hashtag, cor, banner, início, fim e desconto mínimo opcional).
+- Campanhas no ar e próximas aparecem em banner na home; cada uma tem página própria (`/campanha/slug`).
+- O lojista entra na campanha (precisa estar aprovado e com CNPJ ativo) e marca suas lives nela; a hashtag da campanha
+  entra na live automaticamente e a live só pode ser marcada se acontecer dentro do período.
+- Exemplos: Esquenta Black Friday (no ar), Black Friday, Natal e Dia das Mães.
+
 ## Próximas fases
 
 2. Vídeo ao vivo real (LiveKit ou Mux) + chat e espectadores em tempo real

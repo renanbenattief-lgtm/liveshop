@@ -11,6 +11,7 @@ const tabs = [
   { to: '/vendedor/produtos', label: 'Produtos' },
   { to: '/vendedor/lives', label: 'Lives' },
   { to: '/vendedor/batalhas', label: 'Batalhas' },
+  { to: '/vendedor/campanhas', label: 'Campanhas' },
   { to: '/vendedor/frete', label: 'Frete' },
   { to: '/vendedor/loja', label: 'Loja' },
 ]

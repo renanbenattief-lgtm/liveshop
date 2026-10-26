@@ -1,6 +1,8 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider } from '@/lib/auth'
+import { NotificationsProvider } from '@/lib/notifications'
+import Notifications from '@/pages/Notifications'
 import Layout from '@/components/Layout'
 import { RequireAuth } from '@/components/RequireAuth'
 import Home from '@/pages/Home'
@@ -23,12 +25,15 @@ import Shipping from '@/pages/seller/Shipping'
 import StoreSettings from '@/pages/seller/StoreSettings'
 import { NewBattle, SellerBattleDetail, SellerBattles } from '@/pages/seller/Battles'
 import BattlePage from '@/pages/BattlePage'
-import { AdminBattles, AdminCategories, AdminLayout, AdminLives, AdminOverview, AdminSettings, AdminStores } from '@/pages/admin/Admin'
+import CampaignPage from '@/pages/CampaignPage'
+import SellerCampaigns from '@/pages/seller/SellerCampaigns'
+import { AdminCampaigns, AdminBattles, AdminCategories, AdminLayout, AdminLives, AdminOverview, AdminSettings, AdminStores } from '@/pages/admin/Admin'
 import { Empty } from '@/components/ui'
 
 export default function App() {
   return (
     <AuthProvider>
+      <NotificationsProvider>
       <BrowserRouter>
         <Routes>
           <Route element={<Layout />}>
@@ -37,10 +42,12 @@ export default function App() {
             <Route path="ao-vivo" element={<Search liveOnly />} />
             <Route path="live/:id" element={<Live />} />
             <Route path="batalha/:id" element={<BattlePage />} />
+            <Route path="campanha/:slug" element={<CampaignPage />} />
             <Route path="loja/:slug" element={<StorePage />} />
             <Route path="produto/:id" element={<ProductPage />} />
             <Route path="entrar" element={<Login />} />
             <Route path="seguindo" element={<Following />} />
+            <Route path="avisos" element={<Notifications />} />
             <Route path="conta" element={<Account />} />
             <Route path="vender" element={<OpenStore />} />
 
@@ -53,6 +60,7 @@ export default function App() {
               <Route path="batalhas" element={<SellerBattles />} />
               <Route path="batalhas/nova" element={<NewBattle />} />
               <Route path="batalhas/:id" element={<SellerBattleDetail />} />
+              <Route path="campanhas" element={<SellerCampaigns />} />
               <Route path="frete" element={<Shipping />} />
               <Route path="loja" element={<StoreSettings />} />
             </Route>
@@ -63,6 +71,7 @@ export default function App() {
               <Route path="lojas" element={<AdminStores />} />
               <Route path="lives" element={<AdminLives />} />
               <Route path="batalhas" element={<AdminBattles />} />
+              <Route path="campanhas" element={<AdminCampaigns />} />
               <Route path="categorias" element={<AdminCategories />} />
               <Route path="configuracoes" element={<AdminSettings />} />
             </Route>
@@ -72,6 +81,7 @@ export default function App() {
         </Routes>
         <Toaster theme="dark" position="top-center" toastOptions={{ style: { background: '#261C42', border: '1px solid #352A57', color: '#EDE9F7' } }} />
       </BrowserRouter>
+      </NotificationsProvider>
     </AuthProvider>
   )
 }

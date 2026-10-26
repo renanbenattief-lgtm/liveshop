@@ -13,7 +13,7 @@ export default function Dashboard() {
     const [lives, products, followers, lp] = await Promise.all([
       supabase.from('lives').select('*').eq('store_id', store!.id).order('created_at', { ascending: false }).then(must) as Promise<Live[]>,
       supabase.from('products').select('id, name, stock, active, product_images(url, position)').eq('store_id', store!.id).then(must) as Promise<Product[]>,
-      supabase.rpc('store_follower_count', { p_store: store!.id }).then(must) as Promise<number>,
+      supabase.rpc('store_follower_stats', { p_store: store!.id }).then(must).then((r) => (r as { total: number; last_7_days: number }[])[0] ?? { total: 0, last_7_days: 0 }),
       supabase.from('live_products').select('product_id, lives!inner(store_id)').eq('lives.store_id', store!.id).then(must) as Promise<{ product_id: string }[]>,
     ])
     return { lives, products, followers, lp }
@@ -35,7 +35,7 @@ export default function Dashboard() {
   const stats = [
     { icon: Radio, label: 'Lives realizadas', value: done.length },
     { icon: Users, label: 'Pico de espectadores somado', value: compact(peakTotal) },
-    { icon: Users, label: 'Seguidores', value: compact(followers) },
+    { icon: Users, label: followers.last_7_days ? `Seguidores (+${followers.last_7_days} na semana)` : 'Seguidores', value: compact(followers.total) },
     { icon: Package, label: 'Produtos ativos', value: products.filter((p) => p.active).length },
   ]
 
