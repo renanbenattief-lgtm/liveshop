@@ -9,6 +9,7 @@ import { PRODUCT_SELECT } from '@/lib/api'
 import type { Product } from '@/lib/types'
 import { Empty, Field, Price, Spinner } from '@/components/ui'
 import { ImagePicker, TagInput } from '@/components/inputs'
+import { cnpjActive } from '@/lib/cnpj'
 
 export default function LiveSetup() {
   const { store } = useAuth()
@@ -22,7 +23,7 @@ export default function LiveSetup() {
   const [when, setWhen] = useState<'now' | 'later'>(store?.status === 'approved' ? 'now' : 'later')
   const [date, setDate] = useState('')
   const [busy, setBusy] = useState(false)
-  const approved = store?.status === 'approved'
+  const approved = store?.status === 'approved' && !!store && cnpjActive(store)
 
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
 
@@ -113,7 +114,7 @@ export default function LiveSetup() {
           <button type="button" disabled={!approved} onClick={() => setWhen('now')} className={`chip h-12 justify-center ${when === 'now' ? 'chip-on' : ''} disabled:opacity-40`}>Agora</button>
           <button type="button" onClick={() => setWhen('later')} className={`chip h-12 justify-center ${when === 'later' ? 'chip-on' : ''}`}>Agendar</button>
         </div>
-        {!approved && <p className="text-xs text-mist-500 mt-2">Você pode entrar ao vivo assim que sua loja for aprovada. Por enquanto, agende.</p>}
+        {!approved && <p className="text-xs text-mist-500 mt-2">Você pode entrar ao vivo quando a loja estiver aprovada e com CNPJ ativo. Por enquanto, agende.</p>}
         {when === 'later' && <input type="datetime-local" className="input mt-3" value={date} onChange={(e) => setDate(e.target.value)} min={new Date().toISOString().slice(0, 16)} aria-label="Data e hora" />}
       </div>
 

@@ -32,7 +32,7 @@ export default function OpenStore() {
             </li>
           ))}
         </ol>
-        <p className="text-sm text-mist-500 mt-8 mb-8">A plataforma fica com uma comissão sobre cada venda. Sem mensalidade para começar.</p>
+        <p className="text-sm text-mist-500 mt-8 mb-8">Para vender é preciso ter <strong className="text-mist-300">CNPJ ativo na Receita Federal</strong>. A plataforma fica com uma comissão sobre cada venda, sem mensalidade para começar.</p>
       </div>
 
       <div className="card p-5 md:p-6 mb-10 self-start">

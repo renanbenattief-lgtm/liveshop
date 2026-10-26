@@ -45,6 +45,10 @@ export interface Store {
   fast_delivery: boolean
   regions: string[]
   created_at: string
+  cnpj_status: string | null
+  cnpj_legal_name: string | null
+  cnpj_checked_at: string | null
+  is_demo: boolean
 }
 
 export interface ProductImage { id: string; product_id: string; url: string; position: number }

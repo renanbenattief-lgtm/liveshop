@@ -8,15 +8,19 @@ import { UFS, slugify } from '@/lib/format'
 import type { Store } from '@/lib/types'
 import { Field } from '@/components/ui'
 import { ImagePicker } from '@/components/inputs'
+import { BadgeCheck, Loader2, ShieldAlert } from 'lucide-react'
+import { type CnpjResult, checkCnpj, cnpjIsValid, formatCnpj, onlyDigits, verifyStoreCnpj } from '@/lib/cnpj'
 
 type Form = Pick<Store, 'name' | 'slug' | 'description' | 'document' | 'document_type' | 'phone' | 'cep' | 'city' | 'state' | 'category_id'> & { logo: string[]; cover: string[] }
 
 const toForm = (s?: Store | null): Form => ({
   name: s?.name ?? '', slug: s?.slug ?? '', description: s?.description ?? '', document: s?.document ?? '',
-  document_type: s?.document_type ?? 'cnpj', phone: s?.phone ?? '', cep: s?.cep ?? '', city: s?.city ?? '',
+  document_type: 'cnpj', phone: s?.phone ?? '', cep: s?.cep ?? '', city: s?.city ?? '',
   state: s?.state ?? 'SP', category_id: s?.category_id ?? null,
   logo: s?.logo_url ? [s.logo_url] : [], cover: s?.cover_url ? [s.cover_url] : [],
 })
+
+const titleCase = (s: string) => s.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase())
 
 /** Formulário de dados da loja (criação e edição). */
 export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (s: Store) => void }) {
@@ -27,6 +31,31 @@ export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (
   const cats = useAsync(getCategories, [])
   useEffect(() => setF(toForm(store)), [store])
   const set = (p: Partial<Form>) => setF((x) => ({ ...x, ...p }))
+
+  // CNPJ: precisa ser válido e estar ATIVO na Receita
+  const [cnpj, setCnpj] = useState<CnpjResult | null>(null)
+  const [checking, setChecking] = useState(false)
+  const sameAsSaved = !!store?.document && onlyDigits(f.document ?? '') === store.document
+  const savedActive = sameAsSaved && (store?.cnpj_status ?? '').toUpperCase() === 'ATIVA'
+
+  const runCheck = async (value = f.document ?? '') => {
+    if (!cnpjIsValid(value)) { setCnpj({ ok: false, error: 'CNPJ inválido. Confira os números.' }); return null }
+    setChecking(true)
+    const r = await checkCnpj(value)
+    setChecking(false)
+    setCnpj(r)
+    if (r.ok && !store) {
+      // preenche o que estiver vazio com os dados da Receita
+      setF((x) => ({
+        ...x,
+        name: x.name || titleCase(r.trade_name ?? ''),
+        slug: x.name || slugTouched ? x.slug : slugify(r.trade_name ?? ''),
+        city: x.city || titleCase(r.city ?? ''),
+        state: r.uf || x.state,
+      }))
+    }
+    return r
+  }
 
   const lookupCep = async (cep: string) => {
     const clean = cep.replace(/\D/g, '')
@@ -40,6 +69,13 @@ export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
+    if (!cnpjIsValid(f.document ?? '')) return toast.error('CNPJ inválido. Confira os números.')
+    if (!savedActive) {
+      const r = cnpj && onlyDigits(f.document ?? '') ? cnpj : await runCheck()
+      if (r && !r.ok && !r.unavailable) {
+        return toast.error('Só aceitamos lojas com CNPJ ATIVO na Receita Federal', { description: r.error ?? `Situação atual: ${r.status}` })
+      }
+    }
     setBusy(true)
     const payload = {
       name: f.name.trim(), slug: slugify(f.slug || f.name), description: f.description, document: f.document?.replace(/\D/g, '') || null,
@@ -52,8 +88,15 @@ export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (
     const { data, error } = await q
     setBusy(false)
     if (error) {
-      toast.error(error.message.includes('stores_slug_key') ? 'Esse endereço de loja já está em uso. Escolha outro.' : error.message)
+      toast.error(error.message.includes('stores_slug_key') ? 'Esse endereço de loja já está em uso. Escolha outro.'
+        : error.message.includes('stores_document_unique') ? 'Este CNPJ já está cadastrado em outra loja.' : error.message)
       return
+    }
+    // grava a situação do CNPJ na loja (a consulta oficial é feita no servidor)
+    if (!savedActive) {
+      const v = await verifyStoreCnpj()
+      if (v.unavailable) toast('A Receita não respondeu agora', { description: 'Sua loja foi salva. Tente "Verificar CNPJ" de novo em alguns minutos.' })
+      else if (!v.ok) toast.error('CNPJ não está ativo', { description: v.error ?? `Situação: ${v.status}` })
     }
     await refresh()
     onSaved(data as Store)
@@ -61,6 +104,38 @@ export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      <div>
+        <Field label="CNPJ da loja" hint="Para vender no LIVESHOP o CNPJ precisa estar ATIVO na Receita Federal.">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input className="input w-full sm:flex-1 min-w-0 tracking-wide" required inputMode="numeric" placeholder="00.000.000/0000-00" value={formatCnpj(f.document)}
+              onChange={(e) => { set({ document: onlyDigits(e.target.value) }); setCnpj(null) }}
+              onBlur={(e) => { if (onlyDigits(e.target.value).length === 14 && !savedActive) runCheck(e.target.value) }} />
+            <button type="button" onClick={() => runCheck()} disabled={checking} className="btn btn-ghost shrink-0 px-5 self-start sm:self-auto">
+              {checking ? <><Loader2 size={18} className="animate-spin" /> Consultando</> : 'Verificar na Receita'}
+            </button>
+          </div>
+        </Field>
+        {savedActive && !cnpj && (
+          <p className="mt-2 text-sm text-cool inline-flex items-center gap-1.5"><BadgeCheck size={16} /> CNPJ ativo · {store?.cnpj_legal_name}</p>
+        )}
+        {cnpj && (
+          <div className={`mt-2 rounded-2xl border p-3 text-sm ${cnpj.ok ? 'border-cool/50 bg-cool/10' : 'border-onair/50 bg-onair/10'}`} role="status">
+            {cnpj.ok ? (
+              <>
+                <p className="font-semibold text-cool inline-flex items-center gap-1.5"><BadgeCheck size={16} /> CNPJ ATIVO na Receita</p>
+                <p className="mt-1">{cnpj.legal_name}</p>
+                <p className="text-mist-400">{[cnpj.trade_name, cnpj.city && `${cnpj.city}/${cnpj.uf}`].filter(Boolean).join(' · ')}</p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold inline-flex items-center gap-1.5"><ShieldAlert size={16} className="text-onair" />
+                  {cnpj.status ? `Situação na Receita: ${cnpj.status}` : 'Não foi possível validar'}</p>
+                <p className="mt-1 text-mist-300">{cnpj.error ?? (cnpj.legal_name ? `${cnpj.legal_name}. ` : '') + 'Só lojas com CNPJ ATIVO podem vender. Regularize na Receita e tente de novo.'}</p>
+              </>
+            )}
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-[96px_1fr] gap-4 items-start">
         <Field label="Logo"><ImagePicker value={f.logo} onChange={(v) => set({ logo: v })} folder="store" /></Field>
         <Field label="Capa"><ImagePicker value={f.cover} onChange={(v) => set({ cover: v })} folder="store" aspect="wide" /></Field>
@@ -78,14 +153,6 @@ export function StoreForm({ store, onSaved }: { store?: Store | null; onSaved: (
           {cats.data?.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </Field>
-      <div className="grid grid-cols-[110px_1fr] gap-2">
-        <Field label="Documento">
-          <select className="input px-3" value={f.document_type ?? 'cnpj'} onChange={(e) => set({ document_type: e.target.value as 'cpf' | 'cnpj' })}>
-            <option value="cnpj">CNPJ</option><option value="cpf">CPF</option>
-          </select>
-        </Field>
-        <Field label="Número"><input className="input" required inputMode="numeric" value={f.document ?? ''} onChange={(e) => set({ document: e.target.value })} /></Field>
-      </div>
       <Field label="WhatsApp / telefone"><input className="input" inputMode="tel" value={f.phone ?? ''} onChange={(e) => set({ phone: e.target.value })} /></Field>
       <div>
         <p className="field-label">Endereço de onde saem os envios</p>

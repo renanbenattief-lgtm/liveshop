@@ -11,6 +11,7 @@ import { CATEGORY_ICONS, CategoryIcon } from '@/components/CategoryIcon'
 import { BattleStatusPill } from '@/components/battle'
 import { type Battle, type BattleParticipant, PARTICIPANT_SELECT, getTerms } from '@/lib/battles'
 import { money, whenLabel } from '@/lib/format'
+import { cnpjActive, formatCnpj, verifyStoreCnpj } from '@/lib/cnpj'
 
 const tabs = [
   { to: '/admin', label: 'Visão geral', end: true },
@@ -77,6 +78,16 @@ export function AdminStores() {
     return must(await q) as Store[]
   }, [status])
 
+  const [checking, setChecking] = useState<string | null>(null)
+  const recheck = async (s: Store) => {
+    setChecking(s.id)
+    const r = await verifyStoreCnpj(s.id)
+    setChecking(null)
+    if (r.ok) toast.success(`${s.name}: CNPJ ativo`)
+    else toast.error(r.unavailable ? 'A Receita não respondeu agora' : `${s.name}: CNPJ não está ativo`, { description: r.error ?? `Situação: ${r.status}` })
+    reload()
+  }
+
   const setStoreStatus = async (s: Store, next: Store['status']) => {
     let reason: string | null = null
     if (next === 'suspended' || next === 'rejected') {
@@ -104,14 +115,22 @@ export function AdminStores() {
                 <StoreAvatar name={s.name} url={s.logo_url} size={48} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold">{s.name} <span className="text-xs text-mist-400 ml-1">{STATUS[s.status]}</span></p>
-                  <p className="text-sm text-mist-400">{s.city}/{s.state} · {s.document_type?.toUpperCase()} {s.document ?? '—'} · {s.phone ?? 'sem telefone'}</p>
+                  <p className="text-sm text-mist-400">{s.city}/{s.state} · {s.phone ?? 'sem telefone'}</p>
+                  {s.is_demo ? <p className="text-xs text-mist-500 mt-1">Loja de exemplo (sem CNPJ)</p> : (
+                    <div className={`mt-2 rounded-xl px-3 py-2 text-xs ${cnpjActive(s) ? 'bg-cool/10 text-cool' : 'bg-onair/10 text-onair'}`}>
+                      <p className="font-semibold">CNPJ {formatCnpj(s.document) || '—'} · {s.cnpj_status ?? 'não consultado'}</p>
+                      {s.cnpj_legal_name && <p className="text-mist-300">{s.cnpj_legal_name}</p>}
+                      {s.cnpj_checked_at && <p className="text-mist-500">Consultado em {new Date(s.cnpj_checked_at).toLocaleString('pt-BR')}</p>}
+                    </div>
+                  )}
                   {s.description && <p className="text-sm text-mist-300 mt-1 line-clamp-2">{s.description}</p>}
                   {s.status_reason && <p className="text-xs text-onair mt-1">Motivo: {s.status_reason}</p>}
                   <div className="mt-1"><Rating value={s.rating} count={s.rating_count} /></div>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
-                {s.status !== 'approved' && <button onClick={() => setStoreStatus(s, 'approved')} className="btn btn-sm bg-cool text-ink">Aprovar</button>}
+                {s.status !== 'approved' && <button onClick={() => setStoreStatus(s, 'approved')} disabled={!cnpjActive(s)} title={cnpjActive(s) ? '' : 'Só é possível aprovar com CNPJ ATIVO'} className="btn btn-sm bg-cool text-ink">Aprovar</button>}
+                {!s.is_demo && <button onClick={() => recheck(s)} disabled={checking === s.id} className="btn btn-sm btn-ghost">{checking === s.id ? 'Consultando…' : 'Consultar Receita'}</button>}
                 {s.status === 'pending' && <button onClick={() => setStoreStatus(s, 'rejected')} className="btn btn-sm btn-outline">Reprovar</button>}
                 {s.status === 'approved' && <button onClick={() => setStoreStatus(s, 'suspended')} className="btn btn-sm btn-outline text-onair">Suspender</button>}
                 {s.status === 'approved' && <Link to={`/loja/${s.slug}`} className="btn btn-sm btn-ghost">Ver loja</Link>}

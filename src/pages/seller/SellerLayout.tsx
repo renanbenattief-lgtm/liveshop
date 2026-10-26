@@ -1,4 +1,7 @@
 import { NavLink, Outlet, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { cnpjActive, formatCnpj, verifyStoreCnpj } from '@/lib/cnpj'
 import { Clock, ExternalLink, Radio, ShieldAlert } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { StoreAvatar } from '@/components/ui'
@@ -13,8 +16,17 @@ const tabs = [
 ]
 
 export default function SellerLayout() {
-  const { store } = useAuth()
+  const { store, refresh } = useAuth()
+  const [checking, setChecking] = useState(false)
   if (!store) return null
+  const recheck = async () => {
+    setChecking(true)
+    const r = await verifyStoreCnpj()
+    setChecking(false)
+    if (r.ok) toast.success('CNPJ ativo confirmado na Receita')
+    else toast.error(r.unavailable ? 'A Receita não respondeu agora' : 'CNPJ ainda não está ativo', { description: r.error ?? `Situação: ${r.status}` })
+    refresh()
+  }
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 pt-5 md:pt-8">
       <div className="flex items-center gap-3 mb-4">
@@ -27,6 +39,18 @@ export default function SellerLayout() {
         <Link to="/vendedor/lives/nova" className="btn btn-primary btn-sm"><Radio size={15} /> Iniciar live</Link>
       </div>
 
+      {!cnpjActive(store) && (
+        <div className="rounded-2xl bg-onair/15 border border-onair/40 px-4 py-3 mb-4 text-sm">
+          <p className="flex gap-3"><ShieldAlert size={18} className="text-onair shrink-0 mt-0.5" />
+            <span><strong>Seu CNPJ precisa estar ATIVO na Receita Federal para vender.</strong>{' '}
+              {store.cnpj_status ? `Situação na última consulta: ${store.cnpj_status}.` : 'Ainda não conseguimos consultar o seu CNPJ.'}
+              {store.document && <> CNPJ {formatCnpj(store.document)}.</>}</span></p>
+          <div className="flex flex-wrap gap-2 mt-2 pl-7">
+            <button onClick={recheck} disabled={checking} className="btn btn-sm bg-onair text-white">{checking ? 'Consultando…' : 'Verificar CNPJ'}</button>
+            <Link to="/vendedor/loja" className="btn btn-sm btn-ghost">Corrigir CNPJ</Link>
+          </div>
+        </div>
+      )}
       {store.status === 'pending' && (
         <div className="rounded-2xl bg-tag/15 border border-tag/40 px-4 py-3 mb-4 flex gap-3 text-sm">
           <Clock size={18} className="text-tag shrink-0 mt-0.5" />

@@ -52,6 +52,18 @@ botão para fixar produto em destaque · frete (grátis, 48h, prazo, estados) ·
 **Admin:** visão geral · aprovar/reprovar/suspender lojas · encerrar lives ·
 categorias (inclusive +18 oculta) · comissão, hashtags em destaque e admins.
 
+## CNPJ ativo obrigatório
+
+Toda loja precisa de **CNPJ ATIVO na Receita Federal** para vender.
+
+- O cadastro aceita só CNPJ (dígitos validados) e consulta a situação na hora (BrasilAPI, com reserva na CNPJ.ws).
+- A consulta oficial roda no servidor, na função `supabase/functions/verify-cnpj`, e grava situação, razão social e data na loja.
+  O lojista não consegue alterar esses campos.
+- Sem CNPJ ATIVO: a loja não pode ser aprovada, entrar ao vivo nem participar de batalhas.
+- Se uma nova consulta mostrar o CNPJ inativo (inapto, baixado, suspenso), a loja é suspensa e as lives dela saem do ar.
+- O admin vê a situação de cada loja e pode consultar a Receita de novo com um toque.
+- As 8 lojas de exemplo são marcadas como `is_demo` e não exigem CNPJ.
+
 ## Batalhas do Bem
 
 Duas lojas vendem o mesmo produto, pelo mesmo preço, numa live dupla, sem perdedor.
